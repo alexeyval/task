@@ -12,16 +12,19 @@ import (
 )
 
 type Product struct {
-	Name   string `json:"Product"`
-	Price  int
-	Rating int
+	Name   string `json:"product"`
+	Price  int    `json:"price"`
+	Rating int    `json:"rating"`
 }
 
 func findExpensiveProduct(newProduct *Product, product *Product) {
 	if newProduct.Price > product.Price {
 		*product = *newProduct
-	} else if newProduct.Price == product.Price && newProduct.Rating > product.Rating {
+		return
+	}
+	if newProduct.Price == product.Price && newProduct.Rating > product.Rating {
 		*product = *newProduct
+		return
 	}
 }
 
