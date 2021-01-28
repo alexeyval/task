@@ -11,29 +11,37 @@ import (
 	"strings"
 )
 
+const (
+	BUF_PRODUCTS = 50
+)
+
 type Product struct {
 	Name   string `json:"product"`
 	Price  int    `json:"price"`
 	Rating int    `json:"rating"`
 }
 
-func findExpensiveProduct(newProduct *Product, product *Product) {
-	if newProduct.Price > product.Price {
-		*product = *newProduct
-		return
-	}
-	if newProduct.Price == product.Price && newProduct.Rating > product.Rating {
-		*product = *newProduct
-		return
+type ExpensiveProduct struct {
+	Product
+}
+
+func (expProduct *ExpensiveProduct) FindExpensiveProduct(newProducts []Product) {
+	for _, newProduct := range newProducts {
+		if newProduct.Price > expProduct.Price ||
+			newProduct.Price == expProduct.Price &&
+				newProduct.Rating > expProduct.Rating {
+			expProduct.Product = newProduct
+		}
 	}
 }
 
-func readCSV(file *os.File, p *Product) {
+func readCSV(file *os.File, expProduct *ExpensiveProduct) {
 	parser := csv.NewReader(file)
 	if _, err := parser.Read(); err != nil {
 		log.Fatal(err)
 	}
 
+	newProducts := make([]Product, 0, BUF_PRODUCTS)
 	for {
 		product, err := parser.Read()
 		if err == io.EOF {
@@ -52,11 +60,19 @@ func readCSV(file *os.File, p *Product) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		findExpensiveProduct(&Product{Name, Price, Rating}, p)
+
+		newProducts = append(newProducts, Product{Name, Price, Rating})
+		if len(newProducts) == BUF_PRODUCTS {
+			expProduct.FindExpensiveProduct(newProducts)
+			newProducts = newProducts[:0]
+		}
 	}
+	expProduct.FindExpensiveProduct(newProducts)
+	newProducts = newProducts[:0]
+
 }
 
-func readJSON(file *os.File, p *Product) {
+func readJSON(file *os.File, expProduct *ExpensiveProduct) {
 	dec := json.NewDecoder(file)
 
 	_, err := dec.Token()
@@ -64,6 +80,7 @@ func readJSON(file *os.File, p *Product) {
 		log.Fatal(err)
 	}
 
+	newProducts := make([]Product, 0, BUF_PRODUCTS)
 	for dec.More() {
 		var newProduct Product
 		err := dec.Decode(&newProduct)
@@ -71,8 +88,14 @@ func readJSON(file *os.File, p *Product) {
 			log.Fatal(err)
 		}
 
-		findExpensiveProduct(&newProduct, p)
+		newProducts = append(newProducts, newProduct)
+		if len(newProducts) == BUF_PRODUCTS {
+			expProduct.FindExpensiveProduct(newProducts)
+			newProducts = newProducts[:0]
+		}
 	}
+	expProduct.FindExpensiveProduct(newProducts)
+	newProducts = newProducts[:0]
 
 	_, err = dec.Token()
 	if err != nil {
@@ -91,14 +114,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	findProduct := new(Product)
+	expProduct := ExpensiveProduct{}
 	if strings.HasSuffix(file.Name(), ".json") {
-		readJSON(file, findProduct)
+		readJSON(file, &expProduct)
 	} else if strings.HasSuffix(file.Name(), ".csv") {
-		readCSV(file, findProduct)
+		readCSV(file, &expProduct)
 	} else {
 		log.Fatal("I can handle only \".json\" and \".csv\"")
 	}
 
-	fmt.Println(*findProduct)
+	fmt.Println(expProduct.Product)
 }
