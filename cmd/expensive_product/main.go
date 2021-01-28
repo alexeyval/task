@@ -9,10 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-)
-
-const (
-	BUFFER_PRODUCTS = 50
+	"task/config"
 )
 
 type Product struct {
@@ -41,7 +38,7 @@ func readCSV(file *os.File, expProduct *ExpensiveProduct) {
 		log.Fatal(err)
 	}
 
-	newProducts := make([]Product, 0, BUFFER_PRODUCTS)
+	newProducts := make([]Product, 0, config.BufferProducts)
 	for {
 		product, err := parser.Read()
 		if err == io.EOF {
@@ -62,7 +59,7 @@ func readCSV(file *os.File, expProduct *ExpensiveProduct) {
 		}
 
 		newProducts = append(newProducts, Product{Name, Price, Rating})
-		if len(newProducts) == BUFFER_PRODUCTS {
+		if len(newProducts) == config.BufferProducts {
 			expProduct.FindExpensiveProduct(newProducts)
 			newProducts = newProducts[:0]
 		}
@@ -79,7 +76,7 @@ func readJSON(file *os.File, expProduct *ExpensiveProduct) {
 		log.Fatal(err)
 	}
 
-	newProducts := make([]Product, 0, BUFFER_PRODUCTS)
+	newProducts := make([]Product, 0, config.BufferProducts)
 	for dec.More() {
 		var newProduct Product
 		err := dec.Decode(&newProduct)
@@ -88,7 +85,7 @@ func readJSON(file *os.File, expProduct *ExpensiveProduct) {
 		}
 
 		newProducts = append(newProducts, newProduct)
-		if len(newProducts) == BUFFER_PRODUCTS {
+		if len(newProducts) == config.BufferProducts {
 			expProduct.FindExpensiveProduct(newProducts)
 			newProducts = newProducts[:0]
 		}
@@ -106,8 +103,8 @@ func main() {
 	if len(os.Args) != 2 {
 		log.Fatal("One input file expected")
 	}
-	fileName := os.Args[1]
 
+	fileName := os.Args[1]
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
