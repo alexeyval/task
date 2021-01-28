@@ -109,6 +109,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	expProduct := ExpensiveProduct{}
 	if strings.HasSuffix(file.Name(), ".json") {
