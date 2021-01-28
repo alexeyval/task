@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	BUF_PRODUCTS = 50
+	BUFFER_PRODUCTS = 50
 )
 
 type Product struct {
@@ -41,7 +41,7 @@ func readCSV(file *os.File, expProduct *ExpensiveProduct) {
 		log.Fatal(err)
 	}
 
-	newProducts := make([]Product, 0, BUF_PRODUCTS)
+	newProducts := make([]Product, 0, BUFFER_PRODUCTS)
 	for {
 		product, err := parser.Read()
 		if err == io.EOF {
@@ -62,14 +62,13 @@ func readCSV(file *os.File, expProduct *ExpensiveProduct) {
 		}
 
 		newProducts = append(newProducts, Product{Name, Price, Rating})
-		if len(newProducts) == BUF_PRODUCTS {
+		if len(newProducts) == BUFFER_PRODUCTS {
 			expProduct.FindExpensiveProduct(newProducts)
 			newProducts = newProducts[:0]
 		}
 	}
 	expProduct.FindExpensiveProduct(newProducts)
 	newProducts = newProducts[:0]
-
 }
 
 func readJSON(file *os.File, expProduct *ExpensiveProduct) {
@@ -80,7 +79,7 @@ func readJSON(file *os.File, expProduct *ExpensiveProduct) {
 		log.Fatal(err)
 	}
 
-	newProducts := make([]Product, 0, BUF_PRODUCTS)
+	newProducts := make([]Product, 0, BUFFER_PRODUCTS)
 	for dec.More() {
 		var newProduct Product
 		err := dec.Decode(&newProduct)
@@ -89,7 +88,7 @@ func readJSON(file *os.File, expProduct *ExpensiveProduct) {
 		}
 
 		newProducts = append(newProducts, newProduct)
-		if len(newProducts) == BUF_PRODUCTS {
+		if len(newProducts) == BUFFER_PRODUCTS {
 			expProduct.FindExpensiveProduct(newProducts)
 			newProducts = newProducts[:0]
 		}
