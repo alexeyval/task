@@ -44,8 +44,14 @@ func readCSV(file *os.File, p *Product) {
 		}
 
 		Name := product[0]
-		Price, _ := strconv.Atoi(product[1])
-		Rating, _ := strconv.Atoi(product[2])
+		Price, err := strconv.Atoi(product[1])
+		if err != nil {
+			log.Fatal(err)
+		}
+		Rating, err := strconv.Atoi(product[2])
+		if err != nil {
+			log.Fatal(err)
+		}
 		findExpensiveProduct(&Product{Name, Price, Rating}, p)
 	}
 }
