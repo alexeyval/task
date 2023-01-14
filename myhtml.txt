@@ -1,0 +1,25 @@
+//if len(os.Args) != 2 {
+//	log.Fatal("One input file expected")
+//}
+//
+//fileName := os.Args[1]
+//file, err := os.Open(fileName)
+//if err != nil {
+//	log.Fatal(err)
+//}
+//defer func() {
+//	if err := file.Close(); err != nil {
+//		log.Fatal(err)
+//	}
+//}()
+//
+//expProduct := ExpensiveProduct{}
+//if strings.HasSuffix(file.Name(), ".json") {
+//	readJSON(file, &expProduct)
+//} else if strings.HasSuffix(file.Name(), ".csv") {
+//	readCSV(file, &expProduct)
+//} else {
+//	log.Fatal("I can handle only \".json\" and \".csv\"")
+//}
+//
+//fmt.Println(expProduct.Product)

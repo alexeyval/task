@@ -1,128 +1,119 @@
 package main
 
 import (
-	"encoding/csv"
-	"encoding/json"
+	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
-	"task/config"
+	"time"
 )
 
-type Product struct {
-	Name   string `json:"product"`
-	Price  int    `json:"price"`
-	Rating int    `json:"rating"`
-}
-
-type ExpensiveProduct struct {
-	Product
-}
-
-func (expProduct *ExpensiveProduct) FindExpensiveProduct(newProducts []Product) {
-	for _, newProduct := range newProducts {
-		if newProduct.Price > expProduct.Price ||
-			newProduct.Price == expProduct.Price &&
-				newProduct.Rating > expProduct.Rating {
-			expProduct.Product = newProduct
-		}
-	}
-}
-
-func readCSV(file *os.File, expProduct *ExpensiveProduct) {
-	parser := csv.NewReader(file)
-	if _, err := parser.Read(); err != nil {
-		log.Fatal(err)
-	}
-
-	newProducts := make([]Product, 0, config.BufferProducts)
-	for {
-		product, err := parser.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		Name := product[0]
-		Price, err := strconv.Atoi(product[1])
-		if err != nil {
-			log.Fatal(err)
-		}
-		Rating, err := strconv.Atoi(product[2])
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		newProducts = append(newProducts, Product{Name, Price, Rating})
-		if len(newProducts) == config.BufferProducts {
-			expProduct.FindExpensiveProduct(newProducts)
-			newProducts = newProducts[:0]
-		}
-	}
-	expProduct.FindExpensiveProduct(newProducts)
-	newProducts = newProducts[:0]
-}
-
-func readJSON(file *os.File, expProduct *ExpensiveProduct) {
-	dec := json.NewDecoder(file)
-
-	_, err := dec.Token()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	newProducts := make([]Product, 0, config.BufferProducts)
-	for dec.More() {
-		var newProduct Product
-		err := dec.Decode(&newProduct)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		newProducts = append(newProducts, newProduct)
-		if len(newProducts) == config.BufferProducts {
-			expProduct.FindExpensiveProduct(newProducts)
-			newProducts = newProducts[:0]
-		}
-	}
-	expProduct.FindExpensiveProduct(newProducts)
-	newProducts = newProducts[:0]
-
-	_, err = dec.Token()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("One input file expected")
-	}
+	//reader := bufio.NewReader(os.Stdin)
+	//
+	//str, _ := reader.ReadString()
+	//fmt.Print(str)
 
-	fileName := os.Args[1]
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
+	//reader := bufio.NewReader(os.Stdin)
+	//str, _ := reader.
+
+	//for s := range str {
+	//	fmt.Printf("'%v'", string(s))
+	//}
+
+	reader := bufio.NewReader(os.Stdin)
+	str, _, _ := reader.ReadLine()
+	fmt.Print(string(str))
+
+	//duration("", longWord)
+	//f()
+}
+
+func f2() {
+	var strInput string
+	str, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	str = strings.Trim(str, "\n")
+	str = strings.ToLower(str)
+	re := regexp.MustCompile("[a-z0-9]+")
+	strOutput := strings.Join(re.FindAllString(str, -1), "")
+	for _, i := range strOutput {
+		strInput = string(i) + strInput
 	}
-	defer func() {
-		if err := file.Close(); err != nil {
+	if strInput == strOutput {
+		fmt.Println("True")
+	} else {
+		fmt.Println("False")
+	}
+}
+
+func f() {
+	var N, counter int
+	reader, file := getReader("")
+	defer file.Close()
+
+	fmt.Fscan(reader, &N)
+	Ns, _ := bufio.NewReader(reader).ReadString('\n')
+	N, _ = strconv.Atoi(Ns)
+	text, _ := bufio.NewReader(reader).ReadString('\n')
+	fmt.Printf("'%v'", text)
+	textTrim := strings.Trim(text, "\n")
+	textSplit := strings.Split(textTrim, " ")
+	for _, word := range textSplit {
+		if len(word) > counter {
+			counter = len(word)
+		}
+	}
+	fmt.Println(counter)
+}
+
+func getReader(fileName string) (reader *bufio.Reader, file *os.File) {
+	if fileName != "" {
+		file, err := os.Open(fileName)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		reader = bufio.NewReader(file)
+	} else {
+		reader = bufio.NewReader(os.Stdin)
+	}
+	return
+}
+
+func longWord(fileName string) {
+	reader := bufio.NewReader(os.Stdin)
+	_, _, _ = reader.ReadLine()
+	line, _, _ := reader.ReadLine()
+
+	words := strings.Split(string(line), " ")
+	maxWord := words[0]
+	for _, word := range words {
+		if len(word) > len(maxWord) {
+			maxWord = word
+		}
+	}
+	fmt.Printf("'%v'\n'%v'\n", maxWord, len(maxWord))
+}
+
+func duration(fileName string, f func(string)) {
+	start := time.Now()
+	fmt.Printf("------------- %v -------------"+
+		"\nВвод:\n%v\n\nВывод:\n", fileName, strings.TrimSpace(readFileContents(fileName)))
+	f(fileName)
+	d := time.Since(start)
+	fmt.Printf("\nВремя выполнения = %v\n\n", d)
+}
+
+func readFileContents(fileName string) string {
+	if fileName != "" {
+		bytes, err := os.ReadFile(fileName)
+		if err != nil {
 			log.Fatal(err)
 		}
-	}()
-
-	expProduct := ExpensiveProduct{}
-	if strings.HasSuffix(file.Name(), ".json") {
-		readJSON(file, &expProduct)
-	} else if strings.HasSuffix(file.Name(), ".csv") {
-		readCSV(file, &expProduct)
-	} else {
-		log.Fatal("I can handle only \".json\" and \".csv\"")
+		return string(bytes)
 	}
-
-	fmt.Println(expProduct.Product)
+	return ""
 }
